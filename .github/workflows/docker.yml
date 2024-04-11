@@ -1,0 +1,23 @@
+name: Docker Build
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  disk_space:
+    name: Base image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+      - name: Disk Space
+        run: |
+          df -h
+          du -hsc .
+          du -hsc /*
