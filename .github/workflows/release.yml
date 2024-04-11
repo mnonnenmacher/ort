@@ -1,54 +1,54 @@
-name: Release
-
-on:
-  push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Git tag to release from"
-        required: true
-        type: string
-
-env:
-  GRADLE_OPTS: -Dorg.gradle.daemon=false
-
-jobs:
-  publish:
-    env:
-      ORT_VERSION: ${{ inputs.tag || github.ref_name }}
-    permissions:
-      contents: write
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.ORT_VERSION }}
-          fetch-depth: 0
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-home-cache-cleanup: true
-      - name: Publish to OSSRH
-        env:
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
-          ORG_GRADLE_PROJECT_RELEASE_SIGNING_ENABLED: true
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew --no-configuration-cache publishAndReleaseToMavenCentral
-      - name: Build ORT Distributions
-        run: ./gradlew :cli:distTar :cli:distZip :helper-cli:distTar :helper-cli:distZip
-      - name: Generate Release Notes
-        run: ./gradlew -q printChangeLog > RELEASE_NOTES.md
-      - name: Create GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create $ORT_VERSION --notes-file RELEASE_NOTES.md \
-              ./cli/build/distributions/ort-$ORT_VERSION.tgz \
-              ./cli/build/distributions/ort-$ORT_VERSION.zip \
-              ./helper-cli/build/distributions/orth-$ORT_VERSION.tgz \
-              ./helper-cli/build/distributions/orth-$ORT_VERSION.zip
+#name: Release
+#
+#on:
+#  push:
+#    tags:
+#      - "[0-9]+.[0-9]+.[0-9]+"
+#  workflow_dispatch:
+#    inputs:
+#      tag:
+#        description: "Git tag to release from"
+#        required: true
+#        type: string
+#
+#env:
+#  GRADLE_OPTS: -Dorg.gradle.daemon=false
+#
+#jobs:
+#  publish:
+#    env:
+#      ORT_VERSION: ${{ inputs.tag || github.ref_name }}
+#    permissions:
+#      contents: write
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Checkout Repository
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ env.ORT_VERSION }}
+#          fetch-depth: 0
+#      - name: Setup Gradle
+#        uses: gradle/actions/setup-gradle@v3
+#        with:
+#          gradle-home-cache-cleanup: true
+#      - name: Publish to OSSRH
+#        env:
+#          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
+#          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
+#          ORG_GRADLE_PROJECT_RELEASE_SIGNING_ENABLED: true
+#          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+#          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+#        run: ./gradlew --no-configuration-cache publishAndReleaseToMavenCentral
+#      - name: Build ORT Distributions
+#        run: ./gradlew :cli:distTar :cli:distZip :helper-cli:distTar :helper-cli:distZip
+#      - name: Generate Release Notes
+#        run: ./gradlew -q printChangeLog > RELEASE_NOTES.md
+#      - name: Create GitHub Release
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          gh release create $ORT_VERSION --notes-file RELEASE_NOTES.md \
+#              ./cli/build/distributions/ort-$ORT_VERSION.tgz \
+#              ./cli/build/distributions/ort-$ORT_VERSION.zip \
+#              ./helper-cli/build/distributions/orth-$ORT_VERSION.tgz \
+#              ./helper-cli/build/distributions/orth-$ORT_VERSION.zip
