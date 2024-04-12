@@ -78,27 +78,48 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract Docker metadata
-        id: meta
+      - name: Extract Docker Metadata for ort Image
+        id: meta-ort
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/ort
           tags: |
             type=pep440,pattern={{version}}
             type=raw,value=${{ env.ORT_VERSION }}
             type=ref,event=branch
             type=ref,event=tag
-      - name: Build & Push Docker Image
-        id: build-and-push
+            type=sha
+      - name: Build & Push ort Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.IMAGE_CACHE_TAG }}
-          cache-to: type=registry,ref=${{ env.IMAGE_CACHE_TAG }},mode=max
+          tags: ${{ steps.meta-ort.outputs.tags }}
+          labels: ${{ steps.meta-ort.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/ort:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/ort:cache,mode=max
+      - name: Extract Docker Metadata for ort-minimal Image
+        id: meta-ort-minimal
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/ort-minimal
+          tags: |
+            type=pep440,pattern={{version}}
+            type=raw,value=${{ env.ORT_VERSION }}
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha
+      - name: Build & Push ort-minimal Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta-ort-minimal.outputs.tags }}
+          labels: ${{ steps.meta-ort-minimal.outputs.labels }}
+          target: minimal
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/ort:cache
       - name: Print Disk Space
         run: |
           df -h
